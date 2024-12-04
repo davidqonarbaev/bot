@@ -63,7 +63,8 @@ def search_command(update: Update, context: CallbackContext) -> None:
         data = [
             ([1, 7, 100, 111, 222, 555, 700, 777, 888], 9375000),
             ([2, 5, 10, 20, 50, 70, 77, 80, 101, 200, 202, 300, 333, 444, 500, 505, 707, 800, 808, 999], 3750000),
-        ]  # Masalan, qisqartirilgan ma'lumotlar
+            # Boshqa raqamlar va narxlar qo'shish mumkin
+        ]
 
         # Har bir raqam to'plamini qidirish va natijalarni yuborish
         for numbers, price in data:
