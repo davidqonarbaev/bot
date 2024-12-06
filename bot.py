@@ -17,7 +17,7 @@ oylik_nomlar = {
 }
 
 # Bot tokeningizni o'rnating
-BOT_TOKEN = "7906134403:AAHOXU5h3Hy2bHikbUijlhnP5UZP8L1uito"
+BOT_TOKEN = "7922057081:AAGi7X77AbRM-8y38kppr300PxpbJEvlCqo"
 
 
 # Matnni bo‘laklarga bo‘luvchi funksiya
