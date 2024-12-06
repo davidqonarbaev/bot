@@ -8,7 +8,6 @@ from datetime import datetime, timedelta
 import threading
 import schedule
 
-
 # Sana nomlarini qo'lda o'rnatish
 oylik_nomlar = {
     "01": "январь", "02": "февраль", "03": "март", "04": "апрель",
@@ -18,7 +17,6 @@ oylik_nomlar = {
 
 # Bot tokeningizni o'rnating
 BOT_TOKEN = "7922057081:AAGi7X77AbRM-8y38kppr300PxpbJEvlCqo"
-
 
 # Matnni bo‘laklarga bo‘luvchi funksiya
 def split_message(text, max_length=4096):
@@ -126,7 +124,12 @@ async def check(update: Update, context: ContextTypes.DEFAULT_TYPE, kiritilgan_s
     await update.callback_query.message.reply_text("🔄 Маглыуматлар жукленбекте, кутип турын...")
 
     # Selenium orqali ma'lumotlarni olish
-    driver = webdriver.Chrome()
+    chrome_options = webdriver.ChromeOptions()
+    chrome_options.add_argument("--headless")  # Headless mode
+    chrome_options.add_argument("--disable-gpu")  # Optional: Disable GPU hardware acceleration
+    chrome_options.add_argument("--no-sandbox")  # Optional: Disable sandbox mode (for some environments)
+
+    driver = webdriver.Chrome(options=chrome_options)
     lot_data = []
     try:
         driver.get("https://avtoraqam.uzex.uz")
@@ -160,8 +163,6 @@ async def check(update: Update, context: ContextTypes.DEFAULT_TYPE, kiritilgan_s
         input_box.clear()
         input_box.send_keys(kiritilgan_sana)
         time.sleep(1)
-
-
 
         # Qidiruv tugmasini bosish
         search_button = driver.find_element(By.CLASS_NAME, "goSearch")
@@ -201,42 +202,33 @@ async def check(update: Update, context: ContextTypes.DEFAULT_TYPE, kiritilgan_s
         else:
             reply_text = (
                 f"📣 Ассалаўма алейкум @nukus_broker канал агзалары! \n\n📅 Сауда болатын кун: {inson_formatdagi_sana}\n"
-                f"📋 Саудага қойылган автономерлер саны: {len(lot_data)}\n ℹ️ | Аукционнанда автономерге Заказ бермекши болсаниз томендеги номерге телеграм аркалы байланысын!\n☎️ | +998999560950 -BROKER\n❇️ | @DOMINANT_admin -BROKER\n\n"
-                "✅[Автономерлар дизими] 💰[Стартовая цена]\n"
-            )
-            for number, price in lot_data:
-                formatted_price = f"{int(price):,}".replace(",", " ")
-                reply_text += f"✅[{number}]     💰{formatted_price} сум\n"
+                f"💸 95 регион учун актив лотлар:\n\n")
+            for lot in lot_data:
+                reply_text += f"🔹 {lot[0]} - {lot[1]} сум\n"
 
-            reply_text += f"\n📅 Сауда болатын кун: {inson_formatdagi_sana}\n \n ℹ️ | Аукционнанда автономерге Заказ бермекши болсаниз томендеги номерге телеграм аркалы байланысын!\n☎️ | +998999560950 -BROKER \n❇️ | @DOMINANT_admin -BROKER\n📲 | Каналда кунде таза партия койылады. Сол ушын агза болын! @nukusbroker"  # @nukus_broker qo'shish
+            for chunk in split_message(reply_text):
+                await update.callback_query.message.reply_text(chunk)
 
+    except Exception as e:
+        await update.callback_query.message.reply_text(f"⚠️ Хатолик юз берди: {e}")
 
-            # Xabarni bo‘laklarga bo‘lib yuborish
-            for part in split_message(reply_text):
-                await update.callback_query.message.reply_text(part)
     finally:
         driver.quit()
 
 
-# Botni ishga tushirish
 def main() -> None:
     application = Application.builder().token(BOT_TOKEN).build()
 
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CallbackQueryHandler(today, pattern="today"))
     application.add_handler(CallbackQueryHandler(next_day, pattern="next_day"))
-    application.add_handler(CallbackQueryHandler(enter_date, pattern="enter_date"))
     application.add_handler(CallbackQueryHandler(auto_on, pattern="auto_on"))
     application.add_handler(CallbackQueryHandler(auto_off, pattern="auto_off"))
-    application.add_handler(CallbackQueryHandler(start, pattern="start"))
 
-    print("🤖 Bot иследи ✅")
-
-    # Start auto checking in a separate thread
+    # Auto check in separate thread
     threading.Thread(target=auto_check, daemon=True).start()
 
-    application.run_polling()
-
+    application.run_polling(allowed_updates=Update.ALL_TYPES)
 
 if __name__ == "__main__":
     main()
